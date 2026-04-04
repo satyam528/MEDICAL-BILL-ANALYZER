@@ -1,0 +1,7 @@
+streamlit
+easyocr
+pytesseract
+pillow
+pdfplumber
+python-dotenv
+google-generativeai
