@@ -1,7 +1,15 @@
 import streamlit as st
-import easyocr
 from PIL import Image
+import easyocr
 import numpy as np
+import re
+
+@st.cache_resource
+def load_reader():
+    return easyocr.Reader(['en'])
+
+
+
 
 st.set_page_config(page_title="MEDICAL-PLACEHOLDER")
 st.title("MEDICAL BILL AUDITOR PLACEHOLDER")
@@ -22,13 +30,29 @@ if uploaded_file is not None:
     #image
     if uploaded_file.type.startswith("image"):
         image= Image.open(uploaded_file)
-        st.image(uploaded_file,caption="Uploaded Image",use_container_width= True ) 
+        st.image(image,caption="Uploaded Image",width= "stretch" ) 
         
-        reader= easyocr.Reader(['en'])  
+        reader= load_reader()  
         result= reader.readtext(np.array(image))
 
-        full_text="/n".join([item[1] for item in result])
-        st.write(full_text)
+        full_text="\n".join([item[1] for item in result])
+        clean_text=re.sub(r'[^a-zA-Z0-9.\s]', ' ', full_text)
+        clean_text = clean_text.replace('S', '')
+        st.write(clean_text)
+
+        lines=clean_text.split("\n")
+        for line in lines:
+            numbers = re.findall(r'\d+\.\d{2}', line)
+
+            if numbers:
+               item_name = re.sub(r'\d+\.\d{2}', '', line)
+               item_name = re.sub(r'\s+', ' ', item_name).strip()
+
+               st.write(item_name, "→", numbers)
+
+
+        prices = re.findall(r'\d+\.\d{2}', clean_text)
+        st.write("Prices : ",prices)
 
 
 
