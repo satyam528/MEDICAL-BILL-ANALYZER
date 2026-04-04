@@ -8,38 +8,34 @@ import re
 def load_reader():
     return easyocr.Reader(['en'])
 
+# UI
+st.set_page_config(page_title="Medical Bill Auditor")
+st.title("Medical Bill Auditor")
 
-
-
-st.set_page_config(page_title="MEDICAL-PLACEHOLDER")
-st.title("MEDICAL BILL AUDITOR PLACEHOLDER")
-
-uploaded_file=st.file_uploader("PLEASE UPLOAD YOUR FILE HERE :",type=["pdf","jpeg","jpg","png"])
-
-
+uploaded_file = st.file_uploader(
+    "Please upload your file:",
+    type=["pdf", "jpeg", "jpg", "png"]
+)
 
 if uploaded_file is not None:
-    st.success("FILE UPLOADED SUCCESSFULLY...")
+    st.success("File uploaded successfully!")
+    st.write("File Name:", uploaded_file.name)
 
-    #FILE INFO
-    st.write("File Name : ", uploaded_file.name)
-
-
-
-
-    #image
+    # Handle Image
     if uploaded_file.type.startswith("image"):
-        image= Image.open(uploaded_file)
-        st.image(image,caption="Uploaded Image",width= "stretch" ) 
-        
-        reader= load_reader()  
-        result= reader.readtext(np.array(image))
+        image = Image.open(uploaded_file)
+        st.image(image, caption="Uploaded Image", use_container_width=True)
 
-        full_text="\n".join([item[1] for item in result])
-        clean_text=re.sub(r'[^a-zA-Z0-9.\s]', ' ', full_text)
-        clean_text = clean_text.replace('S', '')
+        reader = load_reader()
+        result = reader.readtext(np.array(image))
+
+        # Show extracted raw text (for debugging)
+        full_text = "\n".join([item[1] for item in result])
+        clean_text = re.sub(r'[^a-zA-Z0-9.\s]', ' ', full_text)
+        st.subheader("Extracted Text")
         st.write(clean_text)
 
+        # 🔥 Extract prices
         filtered_prices = []
 
         for item in result:
@@ -48,28 +44,22 @@ if uploaded_file is not None:
             numbers = re.findall(r'\d+\.\d{2}', text)
 
             if numbers:
-               item_name = re.sub(r'\d+\.\d{2}', '', text)
-               item_name = re.sub(r'\s+', ' ', item_name).strip()
+                price = float(numbers[0])
 
-               if item_name == "": 
-                continue
+                # Remove unrealistic OCR errors
+                if price > 2000:
+                    continue
 
-               price = float(numbers[0])
+                filtered_prices.append(price)
 
-               if any(word in item_name.lower() for word in ["amount", "covered", "patient", "insurance", "total"]):
-                continue
+                st.write({"price": price})
 
-               if price > 2000:
-                continue
- 
-               filtered_prices.append(price)
-
-               st.write({"item": item_name, "price": price})
-
-        st.write("Filtered Prices:", filtered_prices)
+        # ✅ Final output OUTSIDE loop
+        st.subheader("Filtered Prices")
+        st.write(filtered_prices)
 
     else:
-        st.write("File uploaded,Preview will be added later")
+        st.write("PDF support will be added later")
 
 else:
-   ("Please Upload a file")
+    st.write("Please upload a file")
