@@ -1,7 +1,7 @@
 streamlit
 easyocr
-pytesseract
 pillow
 pdfplumber
+pdf2image
 python-dotenv
-google-generativeai
+google-generativeai>=0.6.0
