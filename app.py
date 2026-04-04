@@ -27,8 +27,8 @@ if uploaded_file is not None:
         reader= easyocr.Reader(['en'])  
         result= reader.readtext(np.array(image))
 
-        for item in result:
-            st.write(item[1])
+        full_text="/n".join([item[1] for item in result])
+        st.write(full_text)
 
 
 
