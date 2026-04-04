@@ -48,7 +48,12 @@ if uploaded_file is not None:
                item_name = re.sub(r'\d+\.\d{2}', '', line)
                item_name = re.sub(r'\s+', ' ', item_name).strip()
 
-               st.write(item_name, "→", numbers)
+               if item_name == "":
+                  continue
+
+               price=float(numbers[0])
+
+               st.write({"item": item_name, "price": price})
 
 
         prices = re.findall(r'\d+\.\d{2}', clean_text)
