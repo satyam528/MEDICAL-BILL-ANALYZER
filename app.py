@@ -40,26 +40,36 @@ if uploaded_file is not None:
         clean_text = clean_text.replace('S', '')
         st.write(clean_text)
 
-        lines=clean_text.split("\n")
-        for line in lines:
-            numbers = re.findall(r'\d+\.\d{2}', line)
+        filtered_prices = []
+
+        for item in result:
+            text = item[1]
+
+            numbers = re.findall(r'\d+\.\d{2}', text)
 
             if numbers:
-               item_name = re.sub(r'\d+\.\d{2}', '', line)
+               item_name = re.sub(r'\d+\.\d{2}', '', text)
                item_name = re.sub(r'\s+', ' ', item_name).strip()
 
-               if item_name == "":
-                  continue
+               if item_name == "": 
+                continue
 
-               price=float(numbers[0])
+               price = float(numbers[0])
+
+               if any(word in item_name.lower() for word in ["amount", "covered", "patient", "insurance", "total"]):
+                continue
+
+               if price > 2000:
+                continue
+ 
+               filtered_prices.append(price)
 
                st.write({"item": item_name, "price": price})
 
-
-        prices = re.findall(r'\d+\.\d{2}', clean_text)
-        st.write("Prices : ",prices)
-
-
+        st.write("Filtered Prices:", filtered_prices)
 
     else:
         st.write("File uploaded,Preview will be added later")
+
+else:
+   ("Please Upload a file")
