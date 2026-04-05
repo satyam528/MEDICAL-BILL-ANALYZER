@@ -4,92 +4,100 @@ import easyocr
 import numpy as np
 import re
 
+# Cache the OCR reader (fast re-use)
 @st.cache_resource
 def load_reader():
     return easyocr.Reader(['en'])
 
-# UI
-st.set_page_config(page_title="Medical Bill Auditor")
-st.title("Medical Bill Auditor")
+# ====================== UI ======================
+st.set_page_config(page_title="Medical Bill Auditor", layout="centered")
+st.title("🧾 Medical Bill Auditor")
+st.markdown("Upload your hospital bill to detect overcharges, duplicates & mistakes")
 
 uploaded_file = st.file_uploader(
-    "Please upload your file:",
-    type=["pdf", "jpeg", "jpg", "png"]
+    "Upload Bill (PDF or Image)", 
+    type=["pdf", "jpg", "jpeg", "png"]
 )
 
 if uploaded_file is not None:
-    st.success("File uploaded successfully!")
-    st.write("File Name:", uploaded_file.name)
+    st.success("✅ File uploaded successfully!")
+    st.write(f"**File Name:** {uploaded_file.name}")
 
-    # Handle Image
     if uploaded_file.type.startswith("image"):
         image = Image.open(uploaded_file)
-        st.image(image, caption="Uploaded Image", use_container_width=True)
+        st.image(image, caption="Uploaded Bill", use_container_width=True)
 
+        # OCR
         reader = load_reader()
         result = reader.readtext(np.array(image))
 
-        # Show extracted raw text (for debugging)
+        # Raw extracted text
         full_text = "\n".join([item[1] for item in result])
         clean_text = re.sub(r'[^a-zA-Z0-9.\s]', ' ', full_text)
+
         st.subheader("Extracted Text")
-        st.write(clean_text)
+        st.text_area("OCR Output", clean_text, height=300)
+
+        # ==================== TOTAL DETECTION ====================
+        total_patterns = [
+            r'total.*?(\d+\.\d{2})',
+            r'grand total.*?(\d+\.\d{2})',
+            r'amount payable.*?(\d+\.\d{2})',
+            r'to pay.*?(\d+\.\d{2})',
+            r'final amount.*?(\d+\.\d{2})',
+            r'payable amount.*?(\d+\.\d{2})'
+        ]
 
         detected_total = None
-        total_match = re.search( r'(total.*?)(\d+\.\d{2})' , clean_text.lower())
-        if total_match:
-            detected_total=float(total_match.group(2))
-            st.write(detected_total)
+        for pattern in total_patterns:
+            match = re.search(pattern, clean_text.lower())
+            if match:
+                detected_total = float(match.group(1))
+                break
 
+        if detected_total:
+            st.success(f"**Detected Total Amount:** ₹{detected_total}")
+        else:
+            st.warning("Could not detect total amount")
 
-
-        # 🔥 Extract prices
+        # ==================== PRICE EXTRACTION ====================
         filtered_prices = []
-
         for item in result:
             text = item[1]
-
             numbers = re.findall(r'\d+\.\d{2}', text)
+            for num in numbers:
+                price = float(num)
+                if 5 <= price <= 2000:          # realistic hospital price range
+                    filtered_prices.append(price)
 
-            if numbers:
-                price = float(numbers[0])
-
-                # Remove unrealistic OCR errors
-                if price > 2000:
-                    continue
-
-                filtered_prices.append(price)
-
-                st.write({"price": price})
-        
-        # ✅ Final output OUTSIDE loop
-        st.subheader("Filtered Prices")
+        st.subheader("All Detected Prices")
         st.write(filtered_prices)
 
-        cleaned_prices = [p for p in filtered_prices if p != detected_total]
-        # cleaned_prices=list(set(cleaned_prices))
+        # ==================== CLEANED PRICES ====================
+        if detected_total:
+            cleaned_prices = [p for p in filtered_prices if abs(p - detected_total) > 1]
+        else:
+            cleaned_prices = filtered_prices
 
-
-        st.subheader("Cleaned Price")
+        st.subheader("Cleaned Prices (without Total)")
         st.write(cleaned_prices)
 
-        calculated_total=sum(cleaned_prices)
-        st.write("Calculated Total :",calculated_total)
+        calculated_total = sum(cleaned_prices)
 
+        st.write(f"**Calculated Total from Items:** ₹{calculated_total}")
 
-        
-        if(detected_total != None):
-            if abs(calculated_total - detected_total)>1:
-                st.error("Issue Found")
+        # ==================== FINAL CHECK ====================
+        if detected_total:
+            difference = abs(calculated_total - detected_total)
+            if difference > 50:                     # 50 rupees threshold (adjustable)
+                st.error(f"⚠️ Possible Issue Found! Difference = ₹{difference}")
             else:
-                st.success("Bill Correct")
+                st.success("✅ Bill looks correct")
         else:
-            st.warning("Cannot Find Total")
-
-
+            st.warning("Cannot verify total")
 
     else:
-        st.write("PDF support will be added later")
+        st.info("📄 PDF support coming in next step")
 
 else:
-    st.write("Please upload a file")
+    st.info("Please upload a bill to start analysis")
