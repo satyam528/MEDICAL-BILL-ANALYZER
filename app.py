@@ -66,8 +66,8 @@ if uploaded_file is not None:
         st.subheader("Filtered Prices")
         st.write(filtered_prices)
 
-        cleaned_prices=[p for p in filtered_prices if p not in [detected_total,480,120]]
-        cleaned_prices=list(set(cleaned_prices))
+        cleaned_prices = [p for p in filtered_prices if p != detected_total]
+        # cleaned_prices=list(set(cleaned_prices))
 
 
         st.subheader("Cleaned Price")
