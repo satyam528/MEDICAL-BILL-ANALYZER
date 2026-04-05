@@ -35,6 +35,14 @@ if uploaded_file is not None:
         st.subheader("Extracted Text")
         st.write(clean_text)
 
+
+        total_match = re.search( r'(total.*?)(\d+\.\d{2})' , clean_text.lower())
+        if total_match:
+            detected_total=float(total_match.group(2))
+            st.write(detected_total)
+
+
+
         # 🔥 Extract prices
         filtered_prices = []
 
