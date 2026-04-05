@@ -76,7 +76,7 @@ if uploaded_file is not None:
         calculated_total=sum(cleaned_prices)
         st.write("Calculated Total :",calculated_total)
 
-        if cleaned_prices != detected_total:
+        if abs(calculated_total - detected_total)>1:
             st.error("Issue Found")
         else:
             st.success("Bill Correct")
