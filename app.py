@@ -61,10 +61,28 @@ if uploaded_file is not None:
                 filtered_prices.append(price)
 
                 st.write({"price": price})
-
+        
         # ✅ Final output OUTSIDE loop
         st.subheader("Filtered Prices")
         st.write(filtered_prices)
+
+        cleaned_prices=[p for p in filtered_prices if p not in [detected_total,480,120]]
+        cleaned_prices=list(set(cleaned_prices))
+
+
+        st.subheader("Cleaned Price")
+        st.write(cleaned_prices)
+
+        calculated_total=sum(cleaned_prices)
+        st.write("Calculated Total :",calculated_total)
+
+        if cleaned_prices != detected_total:
+            st.error("Issue Found")
+        else:
+            st.success("Bill Correct")
+
+
+
 
     else:
         st.write("PDF support will be added later")
