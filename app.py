@@ -35,7 +35,7 @@ if uploaded_file is not None:
         st.subheader("Extracted Text")
         st.write(clean_text)
 
-
+        detected_total = None
         total_match = re.search( r'(total.*?)(\d+\.\d{2})' , clean_text.lower())
         if total_match:
             detected_total=float(total_match.group(2))
@@ -76,11 +76,15 @@ if uploaded_file is not None:
         calculated_total=sum(cleaned_prices)
         st.write("Calculated Total :",calculated_total)
 
-        if abs(calculated_total - detected_total)>1:
-            st.error("Issue Found")
-        else:
-            st.success("Bill Correct")
 
+        
+        if(detected_total != None):
+            if abs(calculated_total - detected_total)>1:
+                st.error("Issue Found")
+            else:
+                st.success("Bill Correct")
+        else:
+            st.warning("Cannot Find Total")
 
 
 
