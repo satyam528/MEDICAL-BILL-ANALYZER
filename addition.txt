@@ -1,0 +1,127 @@
+# import streamlit as st
+# from PIL import Image
+# import easyocr
+# import numpy as np
+# import re
+
+# # Cache the OCR reader (fast re-use)
+# @st.cache_resource
+# def load_reader():
+#     return easyocr.Reader(['en'])
+
+# # ====================== UI ======================
+# st.set_page_config(page_title="Medical Bill Auditor", layout="centered")
+# st.title("🧾 Medical Bill Auditor")
+# st.markdown("Upload your hospital bill to detect overcharges, duplicates & mistakes")
+
+# uploaded_file = st.file_uploader(
+#     "Upload Bill (PDF or Image)", 
+#     type=["pdf", "jpg", "jpeg", "png"]
+# )
+
+# if uploaded_file is not None:
+#     st.success("✅ File uploaded successfully!")
+#     st.write(f"**File Name:** {uploaded_file.name}")
+
+#     if uploaded_file.type.startswith("image"):
+#         image = Image.open(uploaded_file)
+#         st.image(image, caption="Uploaded Bill", use_container_width=True)
+
+#         # OCR
+#         reader = load_reader()
+#         result = reader.readtext(np.array(image))
+
+#         # Raw extracted text
+#         full_text = "\n".join([item[1] for item in result])
+#         clean_text = re.sub(r'[^a-zA-Z0-9.\s]', ' ', full_text)
+#         # ==================== ITEM + PRICE MAPPING ====================
+#         item_price_list = []
+
+#         for item in result:
+#             text = item[1]
+    
+#     # Extract price
+#         price_match = re.search(r'(\d+\.\d{2})', text)
+    
+#         if price_match:
+#             price = float(price_match.group(1))
+        
+#         # Remove price from text → remaining is item name
+#         item_name = re.sub(r'\d+\.\d{2}', '', text).strip()
+        
+#         if len(item_name) > 2:  # avoid junk
+#             item_price_list.append((item_name.lower(), price))
+
+# st.subheader("Item-wise Data")
+# st.write(item_price_list)
+
+#         st.subheader("Extracted Text")
+#         st.text_area("OCR Output", clean_text, height=300)
+
+#         # ==================== TOTAL DETECTION ====================
+#         total_patterns = [
+#             r'total.*?(\d+\.\d{2})',
+#             r'grand total.*?(\d+\.\d{2})',
+#             r'amount payable.*?(\d+\.\d{2})',
+#             r'to pay.*?(\d+\.\d{2})',
+#             r'final amount.*?(\d+\.\d{2})',
+#             r'payable amount.*?(\d+\.\d{2})'
+#         ]
+
+#         detected_total = None
+#         for pattern in total_patterns:
+#             match = re.search(pattern, clean_text.lower())
+#             if match:
+#                 detected_total = float(match.group(1))
+#                 break
+
+#         if detected_total:
+#             st.success(f"**Detected Total Amount:** ₹{detected_total}")
+#         else:
+#             st.warning("Could not detect total amount")
+
+#         # ==================== PRICE EXTRACTION ====================
+#         filtered_prices = []
+#         for item in result:
+#             text = item[1]
+#             numbers = re.findall(r'\d+\.\d{2}', text)
+#             for num in numbers:
+#                 price = float(num)
+#                 if 5 <= price <= 2000:          # realistic hospital price range
+#                     filtered_prices.append(price)
+
+#         st.subheader("All Detected Prices")
+#         st.write(filtered_prices)
+
+#         # ==================== CLEANED PRICES ====================
+#         if detected_total:
+#             cleaned_prices = [p for p in filtered_prices if abs(p - detected_total) > 1]
+#         else:
+#             cleaned_prices = filtered_prices
+
+#         st.subheader("Cleaned Prices (without Total)")
+#         st.write(cleaned_prices)
+
+#         calculated_total = sum(cleaned_prices)
+
+#         st.write(f"**Calculated Total from Items:** ₹{calculated_total}")
+
+#         # ==================== FINAL CHECK ====================
+#         if detected_total:
+#             difference = abs(calculated_total - detected_total)
+#             if difference > 50:                     # 50 rupees threshold (adjustable)
+#                 st.error(f"⚠️ Possible Issue Found! Difference = ₹{difference}")
+#             else:
+#                 st.success("✅ Bill looks correct")
+#         else:
+#             st.warning("Cannot verify total")
+
+#     else:
+#         st.info("📄 PDF support coming in next step")
+
+# else:
+#     st.info("Please upload a bill to start analysis")
+
+
+#     # 06/04/2026 break
+
