@@ -14,7 +14,6 @@ def load_ocr():
     return easyocr.Reader(['en'])
 
 # ====================== FUNCTIONS ======================
-
 def extract_text(image):
     reader = load_ocr()
     result = reader.readtext(np.array(image))
@@ -108,7 +107,7 @@ if file:
 
     # ================= TOTAL =================
     total = detect_total(text)
-
+ 
     if total:
         st.success(f"Detected Total: ₹{total}")
     else:
