@@ -26,7 +26,7 @@
 #     if uploaded_file.type.startswith("image"):
 #         image = Image.open(uploaded_file)
 #         st.image(image, caption="Uploaded Bill", use_container_width=True)
-
+   
 #         # OCR
 #         reader = load_reader()
 #         result = reader.readtext(np.array(image))
