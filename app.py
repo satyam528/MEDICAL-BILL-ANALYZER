@@ -13,7 +13,7 @@ st.set_page_config(page_title="Medical Bill Auditor", layout="centered")
 def load_ocr():
     return easyocr.Reader(['en'])
 
-# ====================== FUNCTIONS ======================
+# ====================== FUNCTIONS ======================  
 def extract_text(image):
     reader = load_ocr()
     result = reader.readtext(np.array(image))
@@ -164,3 +164,4 @@ if file:
 
 else:
     st.info("Upload a bill image to begin")
+    
