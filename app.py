@@ -16,7 +16,7 @@ def load_ocr():
 # ====================== FUNCTIONS ======================  
 def extract_text(image):
     reader = load_ocr()
-    result = reader.readtext(np.array(image))
+    result = reader.readtext(np.array(image),paragraph=False,detail=1)
     texts = [item[1] for item in result]
     return result, "\n".join(texts)
 
