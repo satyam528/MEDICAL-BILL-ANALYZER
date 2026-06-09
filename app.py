@@ -26,8 +26,8 @@ def clean_text(text):
 
 def normalize_ocr_text(text):
 
-    text = text.replace("o", "0")
-    text = text.replace("O", "0")
+    # text = text.replace("o", "0")
+    # text = text.replace("O", "0")
 
     return text
 
@@ -88,6 +88,13 @@ def map_items_prices(ocr_result):
             continue
 
         name = texts[0]
+        if any(word in name.lower() for word in [
+           "total",
+           "amount due",
+            "grand total",
+            "payable"
+        ]):
+            continue
 
         # skip headers
         if name.lower() in [
@@ -102,7 +109,7 @@ def map_items_prices(ocr_result):
 
         for t in texts[1:]:
 
-            t = normalize_ocr_text
+            t = normalize_ocr_text(str(t))
             match = re.search(r'(\d+\.?\d*)', t)
 
             if match:
@@ -158,17 +165,17 @@ if file:
         text = clean_text(raw_text)
 
         # st.subheader("Raw OCR Result")
-    rows = group_rows(ocr_result)
+    # rows = group_rows(ocr_result)
 
-    st.subheader("Grouped Rows")
+    # st.subheader("Grouped Rows")
 
-    for y, texts in rows.items():
-        st.write(y, "->", texts)
+    # for y, texts in rows.items():
+    #     st.write(y, "->", texts)
 
         # for item in ocr_result:
         #     st.write(item)
 
-    st.subheader("OCR Positions")
+    # st.subheader("OCR Positions")
 
     # for item in ocr_result:
     #     box = item[0]
