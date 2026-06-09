@@ -95,6 +95,9 @@ if file:
     
     # Show Image
     image = Image.open(file)
+
+    width,height=image.size
+    image = image.resize((width*2,height*2))
     st.image(image, caption="Uploaded Bill", use_container_width=True)
 
     # OCR
