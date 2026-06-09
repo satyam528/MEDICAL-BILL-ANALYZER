@@ -103,6 +103,28 @@ if file:
     # OCR
     with st.spinner("Extracting text..."):
         ocr_result, raw_text = extract_text(image)
+
+        # st.subheader("Raw OCR Result")
+
+        # for item in ocr_result:
+        #     st.write(item)
+
+        st.subheader("OCR Positions")
+
+        for item in ocr_result:
+            box = item[0]
+            text = item[1]
+
+            y = box[0][1]
+
+            st.write(
+               f"Y={y} -> {text}"
+            )
+
+
+        
+
+
         text = clean_text(raw_text)
 
     st.subheader("Extracted Text")
