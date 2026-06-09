@@ -24,6 +24,13 @@ def extract_text(image):
 def clean_text(text):
     return re.sub(r'[^a-zA-Z0-9.\s]', ' ', text)
 
+def normalize_ocr_text(text):
+
+    text = text.replace("o", "0")
+    text = text.replace("O", "0")
+
+    return text
+
 
 def detect_total(text):
     patterns = [
@@ -52,22 +59,67 @@ def extract_prices(ocr_result):
     return prices
 
 
-def map_items_prices(ocr_result):
-    items = []
+def group_rows(ocr_result):
+    rows = {}
 
     for item in ocr_result:
+        y = item[0][0][1]
         text = item[1]
 
-        match = re.search(r'(\d+\.\d{2})', text)
-        if match:
-            price = float(match.group(1))
-            name = re.sub(r'\d+\.\d{2}', '', text).strip()
+        row_key = round(y / 20) * 20
 
-            if len(name) > 2:
-                items.append((name.lower(), price))
+        if row_key not in rows:
+            rows[row_key] = []
+
+        rows[row_key].append(text)
+
+    return rows
+
+
+def map_items_prices(ocr_result):
+
+    rows = group_rows(ocr_result)
+
+    items = []
+
+    for y, texts in rows.items():
+
+        if len(texts) < 2:
+            continue
+
+        name = texts[0]
+
+        # skip headers
+        if name.lower() in [
+            "bill summary",
+            "quantity",
+            "unit price",
+            "total"
+        ]:
+            continue
+
+        prices = []
+
+        for t in texts[1:]:
+
+            t = normalize_ocr_text
+            match = re.search(r'(\d+\.?\d*)', t)
+
+            if match:
+                prices.append(float(match.group(1)))
+
+        if prices:
+
+            final_price = max(prices)
+
+            items.append(
+                (
+                    name.lower(),
+                    final_price
+                )
+            )
 
     return items
-
 
 def detect_duplicates(items):
     bucket = defaultdict(list)
@@ -103,29 +155,31 @@ if file:
     # OCR
     with st.spinner("Extracting text..."):
         ocr_result, raw_text = extract_text(image)
+        text = clean_text(raw_text)
 
         # st.subheader("Raw OCR Result")
+    rows = group_rows(ocr_result)
+
+    st.subheader("Grouped Rows")
+
+    for y, texts in rows.items():
+        st.write(y, "->", texts)
 
         # for item in ocr_result:
         #     st.write(item)
 
-        st.subheader("OCR Positions")
+    st.subheader("OCR Positions")
 
-        for item in ocr_result:
-            box = item[0]
-            text = item[1]
+    # for item in ocr_result:
+    #     box = item[0]
+    #     text = item[1]
 
-            y = box[0][1]
+    #     y = box[0][1]
 
-            st.write(
-               f"Y={y} -> {text}"
-            )
-
-
-        
-
-
-        text = clean_text(raw_text)
+    #     st.write(
+    #         f"Y={y} -> {text}"
+    #         )
+    
 
     st.subheader("Extracted Text")
     st.text_area("OCR Output", text, height=250)
@@ -165,6 +219,8 @@ if file:
     st.header("Item Analysis")
 
     items = map_items_prices(ocr_result)
+
+    st.subheader("Parsed Items")
     st.write(items)
 
     # Duplicates
