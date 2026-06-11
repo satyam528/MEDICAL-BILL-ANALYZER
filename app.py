@@ -252,13 +252,3 @@ if file:
 
 else:
     st.info("Upload a bill image to begin")
-
-
-
-
-
-
-     
-
-
-
